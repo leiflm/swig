@@ -359,7 +359,7 @@ namespace std {
 
 #ifdef __cplusplus
 %typemap(memberin) char * {
-  if ($1) delete [] $1;
+  delete [] $1;
   if ($input) {
      $1 = ($1_type) (new char[strlen((const char *)$input)+1]);
      strcpy((char *)$1, (const char *)$input);
@@ -376,7 +376,7 @@ namespace std {
   }
 }
 %typemap(globalin) char * {
-  if ($1) delete [] $1;
+  delete [] $1;
   if ($input) {
      $1 = ($1_type) (new char[strlen((const char *)$input)+1]);
      strcpy((char *)$1, (const char *)$input);
@@ -394,12 +394,12 @@ namespace std {
 }
 #else
 %typemap(memberin) char * {
-  if ($1) free((char *)$1);
-  if ($input) {
-     $1 = ($1_type) malloc(strlen((const char *)$input)+1);
-     strcpy((char *)$1, (const char *)$input);
-  } else {
+  if (!$input) {
+     free($1);
      $1 = 0;
+  } else {
+     $1 = ($1_type) realloc((char *)$1, strlen((const char *)$input)+1);
+     strcpy((char *)$1, (const char *)$input);
   }
 }
 %typemap(memberin,warning=SWIGWARN_TYPEMAP_CHARLEAK_MSG) const char * {
@@ -411,12 +411,12 @@ namespace std {
   }
 }
 %typemap(globalin) char * {
-  if ($1) free((char *)$1);
-  if ($input) {
-     $1 = ($1_type) malloc(strlen((const char *)$input)+1);
-     strcpy((char *)$1, (const char *)$input);
-  } else {
+  if (!$input) {
+     free ($1);
      $1 = 0;
+  } else {
+     $1 = ($1_type) realloc((char *)$1, strlen((const char *)$input)+1);
+     strcpy((char *)$1, (const char *)$input);
   }
 }
 %typemap(globalin,warning=SWIGWARN_TYPEMAP_CHARLEAK_MSG) const char * {
