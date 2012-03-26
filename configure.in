@@ -966,131 +966,36 @@ AC_SUBST(OCTAVECCFLAGS)
 #----------------------------------------------------------------
 
 AC_ARG_WITH(objc, AS_HELP_STRING([--without-objc], [Disable Objective-C]), [with_objc="$withval"], [with_objc=yes])
-AC_ARG_WITH(objc-compiler, [  --with-objc-compiler=path     Set location of Objective-C compiler],[OBJCBIN="$withval"], [OBJCBIN=])
 
 # First, check for "--without-objc" or "--with-objc=no".
 if test x"${with_objc}" = xno -o x"${with_alllang}" = xno ; then 
 AC_MSG_NOTICE([Disabling Objective-C])
-OBJC=
+OBJC_MAKEFILES_PATH=
 else
 
-# set Objective-C compiler
-if test -z "$OBJCBIN" ; then
-  AC_MSG_CHECKING(Objective-C compiler)
-  AC_PROG_OBJC()
-else
-  OBJC="$OBJCBIN"
-fi
+AC_MSG_CHECKING(for Objective-C makefiles)
 
-# check for include files
-AC_MSG_CHECKING(for include file Foundation/Foundation.h)
-AC_ARG_WITH(objcincl, [  --with-objcincl=path    Set location of Objective-C include directory], [OBJCINCDIR="$withval"], [OBJCINCDIR=])
-
-if test -z "$OBJCINCDIR"; then
-  OBJCINCDIR="/usr/include/ /usr/local/include/"
-
-  # Add in default directory for Objective-C headers on Windows for Cygwin(TODO for now), Linux and MacOSX
-  case $host in
-  *-*-cygwin* | *-*-mingw*) OBJCINCDIR="/usr/include/GNUstep /usr/lib/GNUstep/System/Library/Headers $OBJCINCDIR";;
-  *-*-linux*) OBJCINCDIR="/usr/include/GNUstep /usr/lib/GNUstep/System/Library/Headers $OBJCINCDIR";;
-  *-*-darwin*) OBJCINCDIR="/System/Library/Frameworks/Foundation.framework/Headers $OBJCINCDIR";;
-  *);;
-  esac
-fi
-
-for d in $OBJCINCDIR ; do
-  if test -r "$d/Foundation/Foundation.h" ; then
-    AC_MSG_RESULT($d)
-    OBJCINCDIR=$d
-    OBJCINC=-I\"$d\"
-    break
-  fi
-done
-
-if test "$OBJCINC" = "" ; then
-  AC_MSG_RESULT(not found)
-fi
-
-
-# check for objc and/or GNUStep libraries
-AC_ARG_WITH(objclib,[  --with-objclib =path      Set location of Objective-C library directory],[
-	OBJCLIB="-L$withval"], [OBJCLIB=])
-AC_MSG_CHECKING(for Objective-C library)
-
-if test -z "$OBJCLIB"; then
-dirs="/usr/lib/ /usr/local/lib/ /usr/lib/GNUstep/Libraries/"
-for i in $dirs ; do
-	if test -r $i/libobjc.so.2; then
-	    AC_MSG_RESULT($i)
-	    OBJCLIB="-L$i -lobjc"
-	    break
-	fi
-done
-
-if test -z "$OBJCLIB"; then
-	AC_MSG_RESULT(not found)
-else
-for i in $dirs ; do
-	if test -r $i/*gnustep-base*; then
-	    AC_MSG_RESULT($i)
-	    OBJCLIB="-L$i -lgnustep-base $OBJCLIB"
-	    break
-	fi
-done
-fi
-
-else
-AC_MSG_RESULT($OBJCLIB)
-fi
-
-
-# linking options
-case $host in
-*-*-darwin*) 
-        OBJCDYNAMICLINKING="-dynamiclib -framework Foundation"
-        OBJCCFLAGS=""
-        ;;
-*-*-linux*) 
-	OBJCDYNAMICLINKING="$OBJCLIB"
-        OBJCCFLAGS="-fconstant-string-class=NSConstantString"  #To avoid crytpic NXConstantString error with GNUStep...!
-        ;;
-*)
-        OBJCDYNAMICLINKING=""
-        OBJCCFLAGS=""
-        ;;
-esac
-
-# OBJCLIBRARYPREFIX
-case $host in
-*-*-cygwin* | *-*-mingw*) OBJCLIBRARYPREFIX="";;
-*) OBJCLIBRARYPREFIX="lib";;
-esac
-
-
+# set makefiles directory
 # library output
 case $host in
 *-*-darwin*) 
-    OBJCSO=".dylib"
-    OBJCLDSHARED='$(CC)'
-    OBJCCXXSHARED='$(CXX)'
+    OBJC_MAKEFILES_PATH="/Developer/Makefiles/pb_makefiles/"
     ;;
 *)
-    OBJCSO=$SO
-    OBJCLDSHARED='$(LDSHARED)'
-    OBJCCXXSHARED='$(CXXSHARED)'
+    OBJC_MAKEFILES_PATH=`gnustep-config --variable=GNUSTEP_MAKEFILES`
     ;;
 esac
 
+if test -d $OBJC_MAKEFILES_PATH; then
+    AC_MSG_RESULT($OBJC_MAKEFILES_PATH)
+else
+    AC_MSG_RESULT(not found)
+    AC_MSG_NOTICE([Disabling Objective-C])
 fi
 
-AC_SUBST(OBJCINC)
-AC_SUBST(OBJCDYNAMICLINKING)
-AC_SUBST(OBJCLIBRARYPREFIX)
-AC_SUBST(OBJCCFLAGS)
-AC_SUBST(OBJC)
-AC_SUBST(OBJCSO)
-AC_SUBST(OBJCLDSHARED)
-AC_SUBST(OBJCCXXSHARED)
+fi
+
+AC_SUBST(OBJC_MAKEFILES_PATH)
 
 #----------------------------------------------------------------
 # Look for java
@@ -2381,7 +2286,7 @@ fi
 AC_SUBST(SKIP_MZSCHEME)
 
 SKIP_OBJC=
-if test -z "$OBJC" || test -z "$OBJCINC" || test -z "$OBJCLIB" ; then
+if test -z "$OBJC_MAKEFILES_PATH" ; then
     SKIP_OBJC="1"
 fi
 AC_SUBST(SKIP_OBJC)

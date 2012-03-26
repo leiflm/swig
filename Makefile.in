@@ -194,7 +194,12 @@ check-%-examples :
 # individual example
 %.actionexample:
 	@echo $(ACTION)ing Examples/$(LANGUAGE)/$*
-	@(cd Examples/$(LANGUAGE)/$* && $(MAKE) -s $(chk-set-env) $(ACTION))
+	@cd Examples/$(LANGUAGE)/$*; \
+	if test "$(LANGUAGE)" = "objc"; then \
+		$(MAKE) $(chk-set-env) $(ACTION) OBJC_MAKEFILES=@OBJC_MAKEFILES_PATH@; \
+	else \
+		$(MAKE) -s $(chk-set-env) $(ACTION); \
+	fi
 
 # gcj individual example
 java.actionexample:

@@ -1,22 +1,30 @@
-TOP        = ../..
-SWIG       = $(TOP)/../preinst-swig
-CXXSRCS    = example.cxx
-TARGET     = example
-INTERFACE  = example.i
-SWIGOPT    =
-OBJCXXSRCS = *.mm *.m
-OBJCSRCS   = *.m
-OBJCFLAGS  = -fconstant-string-class=NSConstantString 
+MAKEFILE_NAME = Makefile #necessary for GNUStep Makefiles
+include $(OBJC_MAKEFILES)/common.make
 
-all:: objc
+TOP          = ../..
+SWIG         = $(TOP)/../preinst-swig
+INTERFACE    = example.i
+LIBRARY_NAME = libexample
 
-objc::
-	$(MAKE) -f $(TOP)/Makefile CXXSRCS='$(CXXSRCS)' OBJCXXSRCS='$(OBJCXXSRCS)' SWIG='$(SWIG)' \
-	SWIGOPT='$(SWIGOPT)' TARGET='$(TARGET)' INTERFACE='$(INTERFACE)' objc_cpp
-	$(MAKE) -f $(TOP)/Makefile OBJCSRCS='$(OBJCSRCS)' OBJCFLAGS='$(OBJCFLAGS)' TARGET='$(TARGET)' objc_compile
+LIBRARY_NAME            = libexample
+libexample_HEADER_FILES = example.h exampleWrapper.h exampleProxy.h
+libexample_CC_FILES     = example.cxx
+libexample_OBJCC_FILES  = exampleWrapper.mm
+libexample_OBJC_FILES   = exampleProxy.m
+libexample_OBJCCFLAGS  += -fobjc-exceptions
+
+TOOL_NAME            = example
+example_OBJC_FILES   = runme.m
+example_TOOL_LIBS    = -lexample
+example_LIB_DIRS     = -L./obj/
+
+include $(OBJC_MAKEFILES)/library.make
+include $(OBJC_MAKEFILES)/tool.make
+
+check:: all
+
+before-all::
+	$(SWIG) -objc -c++ $(SWIGOPT) $(INTERFACE)
 
 clean::
-	$(MAKE) -f $(TOP)/Makefile objc_clean
-
-check: all
-
+	rm -rf *Wrapper* *Proxy*
